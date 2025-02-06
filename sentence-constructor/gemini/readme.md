@@ -1,4 +1,4 @@
-## MetaAI Powered Assistant Guide
+## Gemini assistant guide
 
 ### Which Model
 Gemini uses Gemini family of large language models, developed by Google
