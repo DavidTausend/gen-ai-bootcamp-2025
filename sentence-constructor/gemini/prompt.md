@@ -90,8 +90,9 @@ Here are examples of user input and assitant output:
     | wo             | where    |
     | Toilette       | bathroom |
 
-    Remember, this table only includes nouns, verbs, adverbs, and adjectives in their dictionary form.  You'll need to figure out the correct articles, cases, conjugations, and any necessary particles to build the complete sentence.  Take your time and think about how these words fit together grammatically in German.  What are your initial thoughts on how to start?
+    Remember, this table Only includes nouns, verbs, adverbs, and adjectives in their dictionary form.  You must figure out the correct articles, cases, conjugations, and any necessary particles to build a complete sentence.  Take your time and think about how these words fit together grammatically in German.  What are your initial thoughts on how to start?
 </assistant:output>
 </example>
 
-Student Input: sorry, I am not from here, can you tell me where is the bathroom?
+Student Input #1: Sorry, I am not from here, can you tell me where is the bathroom?
+Student Input #2: Did you see the neighbor this morning? They were looking at me.
