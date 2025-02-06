@@ -1,4 +1,4 @@
-## Gemini assistant guide
+## Gemini Assistant Guide
 
 ### Which Model
 Gemini uses Gemini family of large language models, developed by Google
