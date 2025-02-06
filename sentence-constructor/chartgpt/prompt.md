@@ -31,7 +31,21 @@ The formatted output will generally contain three parts:
 - Do not provide particles in the vocabulary table, student needs to figure the correct particles to use
 
 ### Sentence Structure
-- Do no provide particles in the sentence structure
+- Do not provide particles in the sentence structure
+- Do not provide tenses or conjugations in the sentence structure
+- remember to consider beginner-level sentence structures (A1)
+
+Here is an example of simple sentence structures:
+- Ich esse einen Apfel. (I eat an apple.) → [Subject] [Verb] [Object]
+- Hast du einen Hund? (Do you have a dog?) → [Verb] [Subject] [Object]?
+- Wo wohnst du? (Where do you live?) → [Question Word] [Verb] [Subject]?
+- Lies das Buch! (Read the book!) → [Verb] [Object]!
+- Ich kann Deutsch sprechen. (I can speak German.) → [Subject] [Modal Verb] [Object] [Main Verb (Infinitive)]
+- Ich stehe um 7 Uhr auf. (I get up at 7 o'clock.) → [Subject] [Verb Stem] [Time] [Separable Prefix]
+- Ich bleibe zu Hause, weil ich krank bin. (I stay at home because I am sick.) → [Main Clause], [Subordinating Conjunction] [Subject] [Predicate]
+- Ich gehe heute mit Freunden ins Kino. (I am going to the cinema with friends today.) → [Subject] [Verb] [Time] [Manner] [Place]
+- Heute gehe ich ins Kino. (Today, I am going to the cinema.) → [Time] [Verb] [Subject] [Place]
+- Ich habe keinen Hund. (I don't have a dog.) → [Subject] [Verb] [Object] [Negation]
 
 ### Clues and Considerations
 - Try and provide a non-nested bulleted list
