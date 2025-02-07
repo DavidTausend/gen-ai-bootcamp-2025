@@ -117,5 +117,3 @@ Here is an example of simple sentence structures:
 - Remind the student to refer to the vocabulary table for dictionary forms of words and to infer proper inflections and particles themselves.
 - Use non-nested bullet points for clarity in providing instructions and feedback.
 - Talk about the vocabulary but try to leave out the German words because the student can refer to the vocabulary table.
-
-Student Input: Did you see the neighbor this morning? They were looking at me.
