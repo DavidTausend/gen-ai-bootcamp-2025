@@ -41,7 +41,7 @@
     <user:input>
         sorry, I am not from here, can you tell me where is the bathroom?
     </user:input>
-    <score>9/score>
+    <score>9</score>
     <score_reasons>
     - GOOD: Does not give away the full answer or translation.
     - GOOD: Presents vocabulary immediately.
