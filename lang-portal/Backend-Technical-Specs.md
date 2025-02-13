@@ -10,6 +10,7 @@ A unified launchpad to launch different learning apps
 ## Technical Requirements:
 
 - The backend will be built using python
+- Invoke is a task runner for python
 - Use SQLite3 as the database
 - The API will be built using GIN
 - The API will always return JSON
@@ -364,4 +365,40 @@ Returns information about the most recent study session.
   "correct": true,
   "created_at": "2025-02-08T17:33:07-05:00"
 }
+```
+
+## Task runner tasks
+
+Lets list out possible tasks we need for our lang portal.
+
+### Initialize Database
+This task will initialize the sqlite database called `words.db
+
+### Migrate Database
+This task will run a series of migrations sql files on the database
+
+Migrations live in the `migrations` folder.
+The migration files will be run in order of their file name.
+The file names should looks like this:
+
+```sql
+0001_init.sql
+0002_create_words_table.sql
+```
+
+### Seed Data
+This task will import json files and transform them into target data for our database.
+
+All seed files live in the `seeds` folder.
+
+In our task we should have DSL to specific each seed file and its expected group word name.
+
+```json
+[
+  {
+    "german": "zu bezahlen",
+    "english": "to pay",
+  },
+  ...
+]
 ```
