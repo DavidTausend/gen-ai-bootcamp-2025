@@ -36,7 +36,7 @@ Setup ->  Attempt
 Setup -> Question
 Clues -> Attempt
 Attempt -> Clues
-Attempt -> Setupt
+Attempt -> Setup
 
 Each state expects the following kinds of inputs and ouputs:
 Inputs and ouputs contain expects components of text.
@@ -72,7 +72,7 @@ Assistant Output:
 When the input is english text then its possible the student is setting up the transcription to be around this text of english
 
 ### German Sentence Attempt
-When the input is japanese text then the student is making an attempt at the anwser
+When the input is german text, then the student is making text, and text then the student text then the student is making an attempt at the anwser
 
 ### Student Question
 When the input sounds like a question about langauge learning then we can assume the user is prompt to enter the Clues state
