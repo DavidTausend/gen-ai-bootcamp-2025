@@ -3,6 +3,7 @@
 This guide provides a step-by-step approach to installing and running Ollama on a macOS system.
 
 ### Software requierements
+
 - macOS
 - Homebrew
 - Docker
@@ -12,20 +13,25 @@ This guide provides a step-by-step approach to installing and running Ollama on 
 To install docker on the Mac, first we must a Homebrew, the most populer package manager for macOS.
 
 Install Homebrew:
+
 ```sh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
 Once Homebrew is installed, continue wiht docker:
+
 ```sh
 brew install --cask docker
 ```
 
 Strart or open the docker application:
+
 ```sh
 open /Applications/Docker.app
 ```
+
 Check the version:
+
 ```sh
 docker --version
 ```
@@ -46,24 +52,48 @@ eg. LLM_MODEL_ID="llama3.2:1b"
 #### Mac
 
 Get your IP address by choosing your network card en0
+
 ```sh
 ifconfig
+```
+
+### Run the docker contanier
+
+```sh
+docker compose up
 ```
 
 ### Download (Pull) a model
 
 Add the localhost port which the container is running, that might be 8008
 
+```sh
 curl http://localhost:8008/api/pull -d '{
   "model": "llama3.2:1b"
 }'
+```
+
+or
+
+```sh
+ollama pull llama3.2:1b
+```
 
 ### Generate a Request
 
+```sh
 curl http://localhost:8008/api/generate -d '{
   "model": "llama3.2:1b",
   "prompt": "Why is the sky blue?"
 }'
+```
+
+### Ollama model loaded
+
+curl -X GET http://localhost:8008/v1/models
+
+Responde:
+{"object":"list","data":[{"id":"llama3.2:1b","object":"model","created":1739702003,"owned_by":"library"}]}
 
 ### Ollama API
 
