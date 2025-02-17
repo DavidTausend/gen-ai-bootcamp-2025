@@ -13,30 +13,31 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 const Settings = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const storedTheme = localStorage.getItem("theme");
+      if (storedTheme === "dark") return true;
+      if (storedTheme === "light") return false;
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+    return false;
+  });
+
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [resetConfirmation, setResetConfirmation] = useState("");
 
   useEffect(() => {
-    const theme = localStorage.getItem("theme");
-    if (theme === "dark") {
-      setIsDarkMode(true);
+    if (isDarkMode) {
       document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
     } else {
-      setIsDarkMode(false);
       document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
     }
-  }, []);
+  }, [isDarkMode]);
 
   const handleThemeChange = (checked: boolean) => {
     setIsDarkMode(checked);
-    if (checked) {
-      localStorage.setItem("theme", "dark");
-      document.documentElement.classList.add("dark");
-    } else {
-      localStorage.setItem("theme", "light");
-      document.documentElement.classList.remove("dark");
-    }
   };
 
   const handleReset = () => {
@@ -50,34 +51,27 @@ const Settings = () => {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">Settings</h1>
-      
+
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <Label htmlFor="dark-mode">Dark Mode</Label>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Enable dark mode for a better night time experience
             </p>
           </div>
-          <Switch
-            id="dark-mode"
-            checked={isDarkMode}
-            onCheckedChange={handleThemeChange}
-          />
+          <Switch id="dark-mode" checked={isDarkMode} onCheckedChange={handleThemeChange} />
         </div>
 
         <div className="border-t pt-6">
           <div className="space-y-0.5">
             <h2 className="text-lg font-medium">Danger Zone</h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Careful! These actions cannot be undone.
             </p>
           </div>
           <div className="mt-4">
-            <Button
-              variant="destructive"
-              onClick={() => setIsResetDialogOpen(true)}
-            >
+            <Button variant="destructive" onClick={() => setIsResetDialogOpen(true)}>
               Reset History
             </Button>
           </div>

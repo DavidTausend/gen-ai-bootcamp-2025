@@ -29,12 +29,17 @@
     --destructive-foreground: 210 40% 98%;
 
     --radius: 0.5rem;
+
+    /* Transition settings */
+    --transition-speed: 0.3s;
   }
 
   /* Dark Mode Variables */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 0 0% 100%;
+    --background: 222.2 47.4% 11.2%;
+    /* Dark mode background */
+    --foreground: 210 40% 98%;
+    /* Light text */
 
     --card: 24 10% 10%;
     --card-foreground: 0 0% 100%;
@@ -48,19 +53,45 @@
     --secondary: 222.2 47.4% 11.2%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 222.2 47.4% 11.2%;
-    --muted-foreground: 210 40% 98%;
+    --muted: 222.2 47.4% 20%;
+    /* Dark mode muted */
+    --muted-foreground: 210 40% 80%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 40% 20%;
+    --accent-foreground: 222.2 47.4% 90%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+  }
+
+  /* Apply background and text colors */
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+  }
+
+  /* Ensure all containers adapt */
+  .card,
+  .popover {
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+  }
+
+  .dark .card,
+  .dark .popover {
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
   }
 }
 
 @layer utilities {
   .glass-effect {
     @apply backdrop-blur-md bg-white/80 dark:bg-black/80;
+  }
+
+  /* Smooth dark mode transition */
+  .dark-transition {
+    transition: background-color var(--transition-speed), color var(--transition-speed);
   }
 }

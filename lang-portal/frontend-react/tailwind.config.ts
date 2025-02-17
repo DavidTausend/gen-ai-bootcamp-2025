@@ -1,15 +1,14 @@
 import type { Config } from "tailwindcss";
-import tailwindcssAnimate from "tailwindcss-animate"; // ✅ Use ESModule import
+import tailwindcssAnimate from "tailwindcss-animate"; 
 
 const config: Config = {
-  darkMode: "class", // Ensure dark mode uses the "class" strategy
+  darkMode: "class", // ✅ Ensures dark mode is applied using the "class" strategy
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
-    "./src/**/*.{js,ts,jsx,tsx}", // Ensure all necessary files are included
+    "./src/**/*.{js,ts,jsx,tsx}", 
   ],
-  prefix: "",
   theme: {
     container: {
       center: true,
@@ -23,8 +22,14 @@ const config: Config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        background: {
+          DEFAULT: "hsl(var(--background))", // ✅ Light mode background
+          dark: "hsl(var(--background-dark))", // ✅ Dark mode background
+        },
+        foreground: {
+          DEFAULT: "hsl(var(--foreground))", 
+          dark: "hsl(var(--foreground-dark))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -85,7 +90,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [tailwindcssAnimate], // ✅ Use imported module
+  plugins: [tailwindcssAnimate], 
 };
 
 export default config satisfies Config;

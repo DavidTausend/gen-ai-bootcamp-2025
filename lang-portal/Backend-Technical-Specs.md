@@ -17,6 +17,31 @@ A unified launchpad to launch different learning apps
 - There will no authentication or authorization
 - Every be treated as a single user
 
+## Directory Structure
+
+```text
+lang-portal-backend/
+│
+├── backend_python/
+│   ├── words.db                # SQLite database
+│   ├── app.py                  # Main Flask application file
+│   ├── models.py               # Database models
+│   ├── routes.py               # API routes
+│   ├── services.py             # Business logic
+│   ├── tasks.py                # Invoke tasks
+│   ├── requirements.txt        # Python dependencies
+│   ├── tests/                  # Test suite
+│   │   ├── test_models.py
+│   │   ├── test_routes.py
+│   │   └── test_services.py
+│   ├── utils/                  # Utility functions
+│   └── db/                     # Database-related scripts
+│       ├── seeds.py            # Script to seed the database
+│       └── migrations/         # Folder for database migrations
+│
+├── README.md                   # Project documentation
+└── .gitignore                  # Git ignore file
+
 ## Database Schema
 
 Our database will be a single sqlite database called `words.db` that will be in the root of the project folder of `backend_python`
