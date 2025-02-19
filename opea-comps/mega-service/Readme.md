@@ -22,7 +22,7 @@ curl -X POST http://localhost:8008/api/chat \
 ```
 
 ```sh
-  curl -X POST http://localhost:8000/v1/example-service \
+  curl -X POST http://localhost:8008/v1/example-service \
   -H "Content-Type: application/json" \
   -d '{
     "messages": [
