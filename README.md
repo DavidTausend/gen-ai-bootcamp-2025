@@ -82,6 +82,9 @@ The OPEA module handles complex chat interaction workflows.
 
 The Vocab Importer is built with Streamlit and allows educators to upload and manage vocabulary lists.
 
+<img src="assets/readme/vocab-importer.webp" alt="Vocab Importer website">
+<img src="assets/readme/vocab-json.webp" alt="Vocab Importer json result">
+
 ### Features:
 
 - Supports JSON uploads of vocabulary lists.
