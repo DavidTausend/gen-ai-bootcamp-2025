@@ -12,6 +12,8 @@ This project uses AI to assist A1-level German learners by guiding sentence cons
 - [Table of Contents](#table-of-contents)
 - [Business](#business)
 - [Backend](#backend)
+  - [YouTube Transcript Retrieval](#youtube-transcript-retrieval)
+  - [RAG Integration](#rag-integration)
 - [Frontend](#frontend)
 - [Opea](#opea-open-process-execution-agent)
 - [Vocab Importer](#vocab-importer)
@@ -53,6 +55,26 @@ The backend is developed using Flask and serves as the core API for the platform
 - **Flask-SQLAlchemy:** ORM for database interactions.
 - **Flask-CORS:** Enables cross-origin requests from the frontend.
 - **Unit Testing:** PyTest for API and database tests.
+
+### YouTube Transcript Retrieval
+
+The platform integrates YouTube transcript retrieval using the YouTubeTranscriptApi. This feature allows students to input a YouTube URL and retrieve the German transcript for language learning.
+
+- Library: [YouTubeTranscriptApi](https://pypi.org/project/youtube-transcript-api/)
+- Features:
+  - Extracts transcripts from YouTube videos.
+  - Supports German transcripts (`'de'` language code).
+  - Parses transcripts into segments for further processing.
+
+### RAG Integration
+
+The platform uses Retrieval-Augmented Generation (RAG) to enhance language learning by retrieving relevant content from stored documents and using it as context for AI-generated responses.
+
+- Vector Database: [ChromaDB](https://docs.trychroma.com/)
+- Key Features:
+  - Stores and indexes YouTube transcripts.
+  - Queries the vector database to find relevant content.
+  - Uses DialoGPT for context-aware response generation.
 
 ## Frontend
 
@@ -133,6 +155,10 @@ There are a couple of problems between the frontend and backend API integration 
 The Mega Service encountered issues related to API payload formatting, which led to 400 Bad Request errors. These were resolved by adjusting the JSON payload structure and improving error handling.
 
 [Mega Service solution](/Users/davidtausend/Documents/lang-portal/genAI/gen-ai-bootcamp-2025/opea-comps/mega-service/Readme.md)
+
+### Audio Implementation
+
+The audio implementation encountered several challenges throughout the development process. One major issue was the difficulty in reliably extracting audio streams from YouTube, primarily due to API changes and unsupported formats. Compatibility problems also arose, as certain audio formats weren’t supported by the integrated player, leading to playback failures. Additionally, downloading and streaming audio resulted in performance lags, particularly with larger files, which negatively impacted user experience. After evaluating these complications, the decision was made to remove the audio features altogether to streamline the platform and avoid further complexities.
 
 ## Acknowledgments
 
