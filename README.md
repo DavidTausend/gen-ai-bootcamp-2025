@@ -113,6 +113,10 @@ The Vocab Importer is built with Streamlit and allows educators to upload and ma
 - Exports student-specific vocabulary for offline practice.
 - Displays word lists.
 
+## Writing Practice
+
+<img src="assets/readme/writing.webp" alt="Writing practice diagramm">
+
 ## Technologies
 
 ### Programming Languages
