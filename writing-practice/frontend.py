@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import base64
+import random
 
 API_URL = "http://localhost:5000"
 
@@ -62,7 +63,7 @@ def main():
             word_group = fetch_word_group("german_basics")
             words = word_group.get("words", [])
             if words:
-                word = words[0]  # Use first word for now
+                word = words[random.randint(0, len(words) - 1)]  # Randomly select a word
                 st.session_state.sentence = generate_sentence(word)
                 if st.session_state.sentence:
                     st.session_state.state = "practice"

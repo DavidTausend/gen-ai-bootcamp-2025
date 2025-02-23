@@ -4,6 +4,9 @@ import random
 import sqlite3
 from manga_ocr import MangaOcr
 import requests
+import json
+from PIL import Image
+import io
 
 app = Flask(__name__)
 
@@ -26,30 +29,6 @@ word_groups = {
     "german_basics": {"words": ["Apfel", "Hund", "Haus", "Auto", "Buch"]}
 }
 
-# Function to interact with Ollama's REST API
-def run_ollama(prompt, model="llama2"):
-    try:
-        url = "http://127.0.0.1:11434/api/generate"
-        payload = {
-            "model": model,
-            "prompt": prompt,
-            "stream": False
-        }
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        data = response.json()
-        
-        # Clean response to remove extra explanations or translations
-        raw_response = data.get("response", "").strip()
-        
-        # Extract the first sentence or main output
-        cleaned_response = raw_response.split("\n")[0]  # Get the first line only
-        
-        return cleaned_response
-    except requests.exceptions.RequestException as e:
-        print(f"Ollama API error: {e}")
-        return "Error generating response."
-
 @app.route("/api/groups/<group_id>/raw", methods=["GET"])
 def get_word_group(group_id):
     return jsonify(word_groups.get(group_id, {}))
@@ -58,15 +37,42 @@ def get_word_group(group_id):
 def generate_sentence():
     data = request.json
     word = data.get("word", "")
-    prompt = f"Generate a simple German sentence using the word '{word}'."
+    prompt = f"Generate one simple English sentence that includes the German word '{word}'. Only return the sentence without any extra text or explanation."
 
     try:
-        print(f"Generating sentence for word: {word}")
+        # Using Ollama for local LLM inference
+        response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={"model": "llama2", "prompt": prompt},
+            stream=True
+        )
 
-        # Use Ollama API to generate the sentence
-        response = run_ollama(prompt)
-        print(f"Generated sentence: {response}")
-        return jsonify({"sentence": response})
+        if response.status_code == 200:
+            # Handle streamed response and parse JSON correctly
+            json_lines = []
+            for line in response.iter_lines():
+                if line:
+                    json_line = line.decode('utf-8').strip()
+                    try:
+                        parsed_line = json.loads(json_line)
+                        json_lines.append(parsed_line)
+                    except json.JSONDecodeError as e:
+                        print(f"Skipping invalid JSON chunk: {e}")
+
+            # Combine responses to form a single sentence
+            generated_text = "".join([chunk.get("response", "") for chunk in json_lines]).strip()
+
+            # Ensure only one sentence is returned
+            generated_sentence = generated_text.split(".")[0] + "."
+
+            return jsonify({"sentence": generated_sentence})
+        else:
+            error_message = response.json().get("error", "Unknown error")
+            print(f"Ollama API error: {error_message}")
+            return jsonify({"sentence": "Error generating response."})
+    except json.JSONDecodeError as e:
+        print(f"JSON Decode Error: {e}")
+        return jsonify({"error": f"JSON parsing error: {str(e)}"}), 500
     except Exception as e:
         print(f"Error in generate_sentence: {e}")
         return jsonify({"error": str(e)}), 500
@@ -80,15 +86,22 @@ def grade_submission():
     try:
         # Decode and transcribe image using MangaOCR
         image_bytes = base64.b64decode(image_data)
-        transcription = ocr(image_bytes)
+        image = Image.open(io.BytesIO(image_bytes))
+        transcription = ocr(image)
         print(f"Transcription: {transcription}")
 
-        # Use Ollama API for translation
+        # Use Ollama for translation
         translation_prompt = f"Translate this German text to English: {transcription}"
-        translation = run_ollama(translation_prompt)
+        translation_response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={"model": "llama2", "prompt": translation_prompt}
+        )
+
+        translation_data = translation_response.json()
+        translation = translation_data.get("response", "").strip()
         print(f"Translation: {translation}")
 
-        # Use Ollama API for grading
+        # Use Ollama for grading
         grading_prompt = (
             f"Grade this German writing sample:\n"
             f"Target English sentence: {target_sentence}\n"
@@ -96,15 +109,19 @@ def grade_submission():
             f"Literal translation: {translation}\n"
             "Provide your assessment with a grade (S/A/B/C) and detailed feedback."
         )
-        grading_response = run_ollama(grading_prompt)
-        print(f"Grading Response: {grading_response}")
 
-        # Simple parsing (improve with regex or structured output if needed)
-        grade = "N/A"
-        feedback = grading_response
-        for line in grading_response.split("\n"):
-            if "Grade:" in line:
-                grade = line.split(":")[1].strip()
+        grading_response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={"model": "llama2", "prompt": grading_prompt}
+        )
+
+        grading_data = grading_response.json()
+        grading_output = grading_data.get("response", "").strip()
+
+        # Parse grade and feedback
+        grade_line = grading_output.split("\n")[0]
+        grade = grade_line.split(":")[1].strip() if ":" in grade_line else "N/A"
+        feedback = "\n".join(grading_output.split("\n")[1:]).strip()
 
         return jsonify({
             "transcription": transcription,

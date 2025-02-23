@@ -3,7 +3,7 @@
 python -m venv venv
 source venv/bin/activate 
 
-pip install streamlit flask openai manga-ocr requests
+pip install streamlit flask openai manga-ocr requests pillow
 
 # Run Ollama
 
