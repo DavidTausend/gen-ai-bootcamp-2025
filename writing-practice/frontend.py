@@ -9,10 +9,19 @@ def fetch_word_group(group_id):
     try:
         response = requests.get(f"{API_URL}/api/groups/{group_id}/raw")
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+
+        # Print the raw response to debug
+        st.write("API Response:", data)
+
+        words = data.get("words", [])
+        if not isinstance(words, list):
+            st.error("Invalid data format received for word group.")
+            return []
+        return words
     except requests.RequestException as e:
         st.error(f"Error fetching word group: {e}")
-        return {}
+        return []
 
 def generate_sentence(word):
     payload = {"word": word}
@@ -60,15 +69,14 @@ def main():
 
     if st.session_state.state == "setup":
         if st.button("Generate Sentence"):
-            word_group = fetch_word_group("german_basics")
-            words = word_group.get("words", [])
+            words = fetch_word_group("german_basics")
             if words:
-                word = words[random.randint(0, len(words) - 1)]  # Randomly select a word
+                word = random.choice(words)  # Safely select random word
                 st.session_state.sentence = generate_sentence(word)
                 if st.session_state.sentence:
                     st.session_state.state = "practice"
             else:
-                st.error("No words available in the word group.")
+                st.error("No words available in the word group or data is invalid.")
 
     elif st.session_state.state == "practice":
         st.write("### Write the following sentence in German:")

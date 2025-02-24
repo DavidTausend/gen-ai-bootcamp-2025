@@ -7,6 +7,8 @@ from PIL import Image
 import io
 import requests
 import json
+import ast
+import re
 
 app = Flask(__name__)
 
@@ -21,14 +23,60 @@ def init_db():
 
 init_db()
 
-# Mock word group database
-word_groups = {
-    "german_basics": {"words": ["Apfel", "Hund", "Haus", "Auto", "Buch"]}
-}
+# Fetch word group from Ollama API
+import re  # Import regex for cleaning
 
 @app.route("/api/groups/<group_id>/raw", methods=["GET"])
 def get_word_group(group_id):
-    return jsonify(word_groups.get(group_id, {}))
+    prompt = f"Generate a list of 5 basic German words suitable for beginners in the category '{group_id}'. Only return the list in JSON format."
+    try:
+        response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={"model": "llama2", "prompt": prompt},
+            stream=True
+        )
+
+        if response.status_code == 200:
+            json_lines = []
+            for line in response.iter_lines():
+                if line:
+                    json_line = line.decode('utf-8').strip()
+                    try:
+                        parsed_line = json.loads(json_line)
+                        json_lines.append(parsed_line)
+                    except json.JSONDecodeError as e:
+                        print(f"Skipping invalid JSON chunk: {e}")
+
+            generated_text = "".join([chunk.get("response", "") for chunk in json_lines]).strip()
+
+            # Debug: Print the raw generated text
+            print(f"Raw Generated Text: {generated_text}")
+
+            # Clean the generated text
+            cleaned_text = re.sub(r'//.*', '', generated_text)  # Remove comments
+            cleaned_text = re.sub(r',\s*([\]}])', r'\1', cleaned_text)  # Remove trailing commas
+
+            # Debug: Print the cleaned text
+            print(f"Cleaned Generated Text: {cleaned_text}")
+
+            # Safely parse cleaned text
+            try:
+                parsed_json = json.loads(cleaned_text)
+                word_list = parsed_json.get(group_id, [])
+                if not isinstance(word_list, list):
+                    raise ValueError("Parsed word list is not a list")
+            except (ValueError, SyntaxError, json.JSONDecodeError) as e:
+                print(f"Error parsing cleaned word list: {e}")
+                return jsonify({"words": [], "error": "Failed to parse cleaned word list."}), 500
+
+            return jsonify({"words": word_list})
+        else:
+            error_message = response.json().get("error", "Unknown error")
+            print(f"Ollama API error: {error_message}")
+            return jsonify({"words": [], "error": error_message}), 500
+    except Exception as e:
+        print(f"Error in get_word_group: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/generate_sentence", methods=["POST"])
 def generate_sentence():
@@ -60,7 +108,7 @@ def generate_sentence():
         else:
             error_message = response.json().get("error", "Unknown error")
             print(f"Ollama API error: {error_message}")
-            return jsonify({"sentence": "Error generating response."})
+            return jsonify({"sentence": "Error generating response."}), 500
     except Exception as e:
         print(f"Error in generate_sentence: {e}")
         return jsonify({"error": str(e)}), 500
@@ -72,20 +120,17 @@ def grade_submission():
     target_sentence = data.get("target_sentence", "")
 
     try:
-        # Decode and transcribe image using pytesseract for English text
         image_bytes = base64.b64decode(image_data)
         image = Image.open(io.BytesIO(image_bytes))
         transcription = pytesseract.image_to_string(image, lang='eng').strip()
         print(f"Transcription: {transcription}")
 
-        # Use Ollama for translation
         translation_prompt = f"Translate this German text to English: {transcription}"
         translation_response = requests.post(
             "http://localhost:11434/api/generate",
             json={"model": "llama2", "prompt": translation_prompt}
         )
 
-        # Parse translation response safely
         translation_text = ""
         for line in translation_response.iter_lines():
             if line:
@@ -98,7 +143,6 @@ def grade_submission():
         translation = translation_text.strip()
         print(f"Translation: {translation}")
 
-        # Use Ollama for grading
         grading_prompt = (
             f"Grade this German writing sample:\n"
             f"Target English sentence: {target_sentence}\n"
@@ -113,7 +157,6 @@ def grade_submission():
             stream=True
         )
 
-        # Parse grading response safely
         grading_text = ""
         for line in grading_response.iter_lines():
             if line:
@@ -124,8 +167,6 @@ def grade_submission():
                     print(f"Skipping invalid JSON in grading: {e}")
 
         grading_output = grading_text.strip()
-
-        # Parse grade and feedback
         grade_line = grading_output.split("\n")[0]
         grade = grade_line.split(":")[1].strip() if ":" in grade_line else "N/A"
         feedback = "\n".join(grading_output.split("\n")[1:]).strip()
@@ -167,7 +208,7 @@ def get_sessions():
         c.execute("SELECT sentence, grade, feedback FROM sessions")
         sessions = c.fetchall()
         conn.close()
-        return jsonify([{"sentence": s[0], "grade": s[1], "feedback": s[2]} for s in sessions])
+        return jsonify([{ "sentence": s[0], "grade": s[1], "feedback": s[2]} for s in sessions])
     except Exception as e:
         print(f"Error in get_sessions: {e}")
         return jsonify({"error": str(e)}), 500
