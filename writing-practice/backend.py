@@ -2,16 +2,13 @@ from flask import Flask, request, jsonify
 import base64
 import random
 import sqlite3
-from manga_ocr import MangaOcr
-import requests
-import json
+import pytesseract
 from PIL import Image
 import io
+import requests
+import json
 
 app = Flask(__name__)
-
-# Initialize MangaOCR
-ocr = MangaOcr()
 
 # Initialize SQLite database
 def init_db():
@@ -40,7 +37,6 @@ def generate_sentence():
     prompt = f"Generate one simple English sentence that includes the German word '{word}'. Only return the sentence without any extra text or explanation."
 
     try:
-        # Using Ollama for local LLM inference
         response = requests.post(
             "http://localhost:11434/api/generate",
             json={"model": "llama2", "prompt": prompt},
@@ -48,7 +44,6 @@ def generate_sentence():
         )
 
         if response.status_code == 200:
-            # Handle streamed response and parse JSON correctly
             json_lines = []
             for line in response.iter_lines():
                 if line:
@@ -59,20 +54,13 @@ def generate_sentence():
                     except json.JSONDecodeError as e:
                         print(f"Skipping invalid JSON chunk: {e}")
 
-            # Combine responses to form a single sentence
             generated_text = "".join([chunk.get("response", "") for chunk in json_lines]).strip()
-
-            # Ensure only one sentence is returned
             generated_sentence = generated_text.split(".")[0] + "."
-
             return jsonify({"sentence": generated_sentence})
         else:
             error_message = response.json().get("error", "Unknown error")
             print(f"Ollama API error: {error_message}")
             return jsonify({"sentence": "Error generating response."})
-    except json.JSONDecodeError as e:
-        print(f"JSON Decode Error: {e}")
-        return jsonify({"error": f"JSON parsing error: {str(e)}"}), 500
     except Exception as e:
         print(f"Error in generate_sentence: {e}")
         return jsonify({"error": str(e)}), 500
@@ -84,10 +72,10 @@ def grade_submission():
     target_sentence = data.get("target_sentence", "")
 
     try:
-        # Decode and transcribe image using MangaOCR
+        # Decode and transcribe image using pytesseract for English text
         image_bytes = base64.b64decode(image_data)
         image = Image.open(io.BytesIO(image_bytes))
-        transcription = ocr(image)
+        transcription = pytesseract.image_to_string(image, lang='eng').strip()
         print(f"Transcription: {transcription}")
 
         # Use Ollama for translation
@@ -97,8 +85,17 @@ def grade_submission():
             json={"model": "llama2", "prompt": translation_prompt}
         )
 
-        translation_data = translation_response.json()
-        translation = translation_data.get("response", "").strip()
+        # Parse translation response safely
+        translation_text = ""
+        for line in translation_response.iter_lines():
+            if line:
+                try:
+                    parsed_line = json.loads(line.decode('utf-8').strip())
+                    translation_text += parsed_line.get("response", "")
+                except json.JSONDecodeError as e:
+                    print(f"Skipping invalid JSON in translation: {e}")
+
+        translation = translation_text.strip()
         print(f"Translation: {translation}")
 
         # Use Ollama for grading
@@ -112,11 +109,21 @@ def grade_submission():
 
         grading_response = requests.post(
             "http://localhost:11434/api/generate",
-            json={"model": "llama2", "prompt": grading_prompt}
+            json={"model": "llama2", "prompt": grading_prompt},
+            stream=True
         )
 
-        grading_data = grading_response.json()
-        grading_output = grading_data.get("response", "").strip()
+        # Parse grading response safely
+        grading_text = ""
+        for line in grading_response.iter_lines():
+            if line:
+                try:
+                    parsed_line = json.loads(line.decode('utf-8').strip())
+                    grading_text += parsed_line.get("response", "")
+                except json.JSONDecodeError as e:
+                    print(f"Skipping invalid JSON in grading: {e}")
+
+        grading_output = grading_text.strip()
 
         # Parse grade and feedback
         grade_line = grading_output.split("\n")[0]

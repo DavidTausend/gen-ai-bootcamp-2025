@@ -13,3 +13,7 @@ pip install -r requirements.txt
 # Run the Backend
 
 python3 app.py
+
+# initialize the database
+
+python init_db.py

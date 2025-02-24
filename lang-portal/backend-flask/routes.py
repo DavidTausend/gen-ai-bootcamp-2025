@@ -1,7 +1,12 @@
 from flask import Blueprint, jsonify, request
 from models import db, Word, WordGroup, StudySession, StudyActivity
+from services import grade_submission
 
 api = Blueprint('api', __name__)
+
+# ----------------------------
+# Study Sessions Endpoints
+# ----------------------------
 
 @api.route('/api/dashboard/last_study_session', methods=['GET'])
 def get_last_study_session():
@@ -12,20 +17,52 @@ def get_last_study_session():
             "id": last_session.id,
             "group_id": last_session.group_id,
             "created_at": last_session.created_at.isoformat(),
-            "study_activities": [activity.id for activity in last_session.activities],  # ✅ Fix here
+            "study_activities": [activity.id for activity in last_session.activities],
             "group_name": WordGroup.query.get(last_session.group_id).name
         }
         return jsonify(response)
     return jsonify({"error": "No study sessions found"}), 404
 
+@api.route('/api/study_sessions', methods=['GET'])
+def get_study_sessions():
+    """Retrieve all study sessions."""
+    sessions = StudySession.query.all()
+    return jsonify([{
+        'id': session.id,
+        'group_id': session.group_id,
+        'created_at': session.created_at.isoformat()
+    } for session in sessions])
+
+@api.route('/api/study_sessions', methods=['POST'])
+def add_study_session():
+    """Add a new study session."""
+    data = request.get_json()
+    if "group_id" not in data:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    new_session = StudySession(group_id=data['group_id'])
+    db.session.add(new_session)
+    db.session.commit()
+    return jsonify({'id': new_session.id}), 201
+
+@api.route('/api/study_sessions/<int:session_id>', methods=['DELETE'])
+def delete_study_session(session_id):
+    """Delete a study session."""
+    session = StudySession.query.get_or_404(session_id)
+    db.session.delete(session)
+    db.session.commit()
+    return jsonify({'result': 'success'}), 200
+
+# ----------------------------
+# Words Endpoints
+# ----------------------------
+
 @api.route('/api/words', methods=['GET'])
 def get_words_paginated():
     """Retrieve words with pagination."""
     page = request.args.get('page', type=int)
-
-    # Fix: Validate `page` input
     if page is None or page < 1:
-        return jsonify({"error": "Invalid page number"}), 400  # ✅ Now correctly returns `400`
+        return jsonify({"error": "Invalid page number"}), 400
 
     per_page = 100
     words = Word.query.paginate(page=page, per_page=per_page, error_out=False)
@@ -46,20 +83,17 @@ def get_words_paginated():
 def add_word():
     """Add a new word with input validation."""
     data = request.get_json()
-
-    # Fix: Validate required fields before inserting into DB
     if "german" not in data or not data["german"] or "english" not in data or not data["english"]:
         return jsonify({"error": "Missing required fields: 'german' and 'english' are required"}), 400
 
     new_word = Word(
         german=data['german'],
         english=data['english'],
-        parts=data.get('parts', "{}")  # Provide default value
+        parts=data.get('parts', "{}")
     )
     db.session.add(new_word)
     db.session.commit()
     return jsonify({'id': new_word.id}), 201
-
 
 @api.route('/api/words/<int:word_id>', methods=['GET'])
 def get_word_details(word_id):
@@ -88,6 +122,10 @@ def delete_word(word_id):
     db.session.commit()
     return jsonify({'result': 'success'}), 200
 
+# ----------------------------
+# Word Groups Endpoints
+# ----------------------------
+
 @api.route('/api/groups', methods=['GET'])
 def get_groups():
     """Retrieve all word groups."""
@@ -99,7 +137,7 @@ def add_group():
     """Add a new word group."""
     data = request.get_json()
     if "name" not in data:
-        return jsonify({"error": "Missing required fields"}), 400  # ✅ Validation
+        return jsonify({"error": "Missing required fields"}), 400
 
     new_group = WordGroup(name=data['name'])
     db.session.add(new_group)
@@ -124,53 +162,41 @@ def delete_group(group_id):
     db.session.commit()
     return jsonify({'result': 'success'}), 200
 
-@api.route('/api/study_sessions', methods=['GET'])
-def get_study_sessions():
-    """Retrieve all study sessions."""
-    sessions = StudySession.query.all()
-    return jsonify([{'id': session.id, 'group_id': session.group_id, 'created_at': session.created_at.isoformat()} for session in sessions])
+# ----------------------------
+# Grading and Submission Endpoints
+# ----------------------------
 
-@api.route('/api/study_sessions', methods=['POST'])
-def add_study_session():
-    """Add a new study session."""
-    data = request.get_json()
-    if "group_id" not in data:
-        return jsonify({"error": "Missing required fields"}), 400  # ✅ Validation
-
-    new_session = StudySession(group_id=data['group_id'])
-    db.session.add(new_session)
-    db.session.commit()
-    return jsonify({'id': new_session.id}), 201
-
-@api.route('/api/study_sessions/<int:session_id>', methods=['DELETE'])
-def delete_study_session(session_id):
-    """Delete a study session."""
-    session = StudySession.query.get_or_404(session_id)
-    db.session.delete(session)
-    db.session.commit()
-    return jsonify({'result': 'success'}), 200
-
-@api.route('/api/study_activities', methods=['POST'])
-def add_study_activity():
-    """Add a new study activity."""
-    data = request.get_json()
-
-    # Fix: Validate required fields
-    if "study_session_id" not in data:
-        return jsonify({"error": "Missing required fields"}), 400  # ✅ Now correctly returns `400`
-
-    new_activity = StudyActivity(study_session_id=data['study_session_id'])
-    db.session.add(new_activity)
-    db.session.commit()
-    return jsonify({'id': new_activity.id}), 201
-
-@api.route('/api/reset', methods=['POST'])
-def reset_history():
+@api.route('/api/grade_submission', methods=['POST'])
+def grade_submission_route():
+    """Grade a user's submission."""
     try:
-        db.session.query(StudyActivity).delete()
-        db.session.query(StudySession).delete()
-        db.session.query(Word).delete()
-        db.session.commit()
-        return jsonify({"message": "History reset successfully"}), 200
+        data = request.get_json(force=True)
+        target_sentence = data.get('target_sentence')
+        transcription = data.get('transcription')
+
+        if not target_sentence or not transcription:
+            return jsonify({"error": "Both 'target_sentence' and 'transcription' are required"}), 400
+
+        result = grade_submission(target_sentence, transcription)
+
+        if 'error' in result:
+            return jsonify({"error": result['error']}), 500
+
+        return jsonify(result), 200
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Error in grade_submission: {str(e)}")
+        return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
+
+@api.route('/api/sessions/<int:session_id>/add_grade', methods=['POST'])
+def add_grade(session_id):
+    """Add grade to a study session."""
+    data = request.get_json()
+    grade = data.get('grade')
+
+    session = StudySession.query.get_or_404(session_id)
+    session.reviews += 1  # Or handle grades as needed
+
+    db.session.commit()
+
+    return jsonify({"message": "Grade added successfully", "session_id": session_id})
