@@ -60,6 +60,8 @@ The backend is developed using Flask and serves as the core API for the platform
 
 The platform integrates YouTube transcript retrieval using the YouTubeTranscriptApi. This feature allows students to input a YouTube URL and retrieve the German transcript for language learning.
 
+<img src="assets/readme/lenguage_assistant.webp" alt="lenguage assistant">
+
 - Library: [YouTubeTranscriptApi](https://pypi.org/project/youtube-transcript-api/)
 - Features:
   - Extracts transcripts from YouTube videos.
@@ -75,6 +77,33 @@ The platform uses Retrieval-Augmented Generation (RAG) to enhance language learn
   - Stores and indexes YouTube transcripts.
   - Queries the vector database to find relevant content.
   - Uses DialoGPT for context-aware response generation.
+
+### Audio
+
+The platform integrates text-to-speech (TTS) capabilities, allowing students to listen the questions and answers.
+
+<img src="assets/readme/audio.webp" alt="Audio result">
+
+#### Features
+- **Text-to-Speech (TTS):** Uses `gTTS` (Google Text-to-Speech) to generate spoken versions of AI-generated questions and answers.
+- **Automatic Question Generation:** The system formulates a relevant question from the provided transcript or user query.
+- **Audio Playback in UI:** The generated question and answer are available as **clickable audio players**.
+- **Language Support:** Ensures proper **German pronunciation** by specifying the `'de'` language parameter.
+
+#### **🔹 Libraries Used**
+- [gTTS (Google Text-to-Speech)](https://pypi.org/project/gTTS/)
+- [Streamlit Audio Player](https://docs.streamlit.io/)
+
+#### How It Works
+1. Question:
+   - The AI extracts a relevant question from the user input and generates the answer.
+  
+2. Text-to-Speech Conversion:
+   - `gTTS` converts the question and AI-generated answer into spoken audio.
+   - The audio is saved as a temporary file.
+
+3. Playback in UI:
+   - Students can listen to both the question and the answer using embedded audio players in the Streamlit app.
 
 ## Frontend
 
@@ -131,10 +160,6 @@ The Vocab Importer is built with Streamlit and allows educators to upload and ma
 - **Frontend:** Streamlit
 - **AI Model:** Llama2 via **Ollama API**
 - **Database:** SQLite (`study_sessions.db`)
-
-
-
-
 
 ### Programming Languages
 

@@ -17,6 +17,8 @@ except RuntimeError:
 import streamlit as st
 from backend.chat import LocalChat
 from backend.get_transcript import get_youtube_transcript
+from gtts import gTTS  # Google Text-to-Speech
+import base64
 
 # Initialize LocalChat with RAG integration
 local_chat = LocalChat(
@@ -59,5 +61,29 @@ if query:
         combined_context = "\n".join(rag_results['documents'][0])
         response = local_chat.generate_response(f"{combined_context}\n\nUser: {query}")
         st.write("🤖 AI Response:", response)
+
+        # 🔊 Generate Audio for Question
+        tts_question = gTTS(text=query, lang="de")
+        question_audio_path = "question_audio.mp3"
+        tts_question.save(question_audio_path)
+
+        # 🔊 Generate Audio for Answer
+        tts_answer = gTTS(text=response, lang="de")
+        answer_audio_path = "answer_audio.mp3"
+        tts_answer.save(answer_audio_path)
+
+        # Function to encode audio files for Streamlit playback
+        def get_audio_base64(file_path):
+            with open(file_path, "rb") as audio_file:
+                encoded_audio = base64.b64encode(audio_file.read()).decode("utf-8")
+            return f"data:audio/mp3;base64,{encoded_audio}"
+
+        # Display audio buttons
+        st.write("🎤 **Listen to the Question:**")
+        st.audio(get_audio_base64(question_audio_path), format="audio/mp3")
+
+        st.write("🎤 **Listen to the Answer:**")
+        st.audio(get_audio_base64(answer_audio_path), format="audio/mp3")
+
     else:
         st.warning("⚠️ No relevant documents found in RAG.")
