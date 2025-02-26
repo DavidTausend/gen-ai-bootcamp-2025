@@ -115,9 +115,26 @@ The Vocab Importer is built with Streamlit and allows educators to upload and ma
 
 ## Writing Practice
 
-<img src="assets/readme/writing.webp" alt="Writing practice diagramm">
+<img src="assets/readme/writing_practice.webp" alt="Writing practice">
 
-## Technologies
+
+### Features
+- **Word Group Generation**: Fetches basic German vocabulary groups from the **Ollama API**.
+- **Sentence Construction**: Generates simple English sentences containing a selected German word.
+- **Handwriting Recognition**: Uses `pytesseract` to transcribe student-written responses.
+- **Automated Grading**: Evaluates student responses based on correctness, grammar, and structure.
+- **Study Session Storage**: Saves graded sessions to a local SQLite database for review (feature under development).
+
+### Technologies
+
+- **Backend:** Flask (`pytesseract`, `requests`, `sqlite3`)
+- **Frontend:** Streamlit
+- **AI Model:** Llama2 via **Ollama API**
+- **Database:** SQLite (`study_sessions.db`)
+
+
+
+
 
 ### Programming Languages
 
@@ -157,6 +174,10 @@ There are a couple of problems between the frontend and backend API integration 
 ### Mega Service
 
 The Mega Service encountered issues related to API payload formatting, which led to 400 Bad Request errors. These were resolved by adjusting the JSON payload structure and improving error handling.
+
+### Lenguage assistant Audio
+
+I attempted to implement audio for the language assistant, but I was unable to make it work, so the feature was rolled back. My implementation may have been incorrect because I tried to download the audio from YouTube instead of having the LLM read the text.
 
 [Mega Service solution](/Users/davidtausend/Documents/lang-portal/genAI/gen-ai-bootcamp-2025/opea-comps/mega-service/Readme.md)
 

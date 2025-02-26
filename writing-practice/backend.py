@@ -120,11 +120,13 @@ def grade_submission():
     target_sentence = data.get("target_sentence", "")
 
     try:
+        # Transcribe the image using pytesseract
         image_bytes = base64.b64decode(image_data)
         image = Image.open(io.BytesIO(image_bytes))
         transcription = pytesseract.image_to_string(image, lang='eng').strip()
         print(f"Transcription: {transcription}")
 
+        # Translate the transcription
         translation_prompt = f"Translate this German text to English: {transcription}"
         translation_response = requests.post(
             "http://localhost:11434/api/generate",
@@ -143,6 +145,7 @@ def grade_submission():
         translation = translation_text.strip()
         print(f"Translation: {translation}")
 
+        # Grade the submission
         grading_prompt = (
             f"Grade this German writing sample:\n"
             f"Target English sentence: {target_sentence}\n"
@@ -171,6 +174,16 @@ def grade_submission():
         grade = grade_line.split(":")[1].strip() if ":" in grade_line else "N/A"
         feedback = "\n".join(grading_output.split("\n")[1:]).strip()
 
+        # Save the graded session
+        conn = sqlite3.connect("study_sessions.db")
+        c = conn.cursor()
+        c.execute("INSERT INTO sessions (sentence, grade, feedback) VALUES (?, ?, ?)",
+                  (target_sentence, grade, feedback))
+        conn.commit()
+        conn.close()
+        print("Session saved successfully.")
+
+        # Return the response
         return jsonify({
             "transcription": transcription,
             "translation": translation,
@@ -205,10 +218,19 @@ def get_sessions():
     try:
         conn = sqlite3.connect("study_sessions.db")
         c = conn.cursor()
-        c.execute("SELECT sentence, grade, feedback FROM sessions")
+        c.execute("SELECT id, sentence, grade, feedback FROM sessions ORDER BY id DESC")
         sessions = c.fetchall()
         conn.close()
-        return jsonify([{ "sentence": s[0], "grade": s[1], "feedback": s[2]} for s in sessions])
+
+        # Format sessions for frontend
+        formatted_sessions = [{
+            "id": s[0],
+            "sentence": s[1],
+            "grade": s[2],
+            "feedback": s[3]
+        } for s in sessions]
+
+        return jsonify(formatted_sessions)
     except Exception as e:
         print(f"Error in get_sessions: {e}")
         return jsonify({"error": str(e)}), 500

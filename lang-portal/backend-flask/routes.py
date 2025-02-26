@@ -5,7 +5,7 @@ from services import grade_submission, generate_sentence, transcribe_image, gene
 api = Blueprint('api', __name__)
 
 # ----------------------------
-# Study Sessions Endpoints
+# Dashboard Endpoint
 # ----------------------------
 
 @api.route('/api/dashboard/last_study_session', methods=['GET'])
@@ -16,11 +16,20 @@ def get_last_study_session():
             "id": last_session.id,
             "group_id": last_session.group_id,
             "created_at": last_session.created_at.isoformat(),
-            "study_activities": [activity.id for activity in last_session.activities],
+            "study_activities": [{
+                "id": activity.id,
+                "transcription": activity.transcription,
+                "grade": activity.grade,
+                "feedback": activity.feedback
+            } for activity in last_session.activities],
             "group_name": WordGroup.query.get(last_session.group_id).name
         }
         return jsonify(response)
     return jsonify({"error": "No study sessions found"}), 404
+
+# ----------------------------
+# Study Sessions Endpoints
+# ----------------------------
 
 @api.route('/api/study_sessions', methods=['GET'])
 def get_study_sessions():
@@ -48,6 +57,25 @@ def delete_study_session(session_id):
     db.session.delete(session)
     db.session.commit()
     return jsonify({'result': 'success'}), 200
+
+# ----------------------------
+# Study Activities Endpoints
+# ----------------------------
+
+@api.route('/api/study_activities', methods=['GET'])
+def get_study_activities():
+    activities = StudyActivity.query.all()
+    response = []
+    for activity in activities:
+        response.append({
+            "id": activity.id,
+            "session_id": activity.session_id,
+            "created_at": activity.created_at.isoformat(),
+            "transcription": activity.transcription,
+            "grade": activity.grade,
+            "feedback": activity.feedback
+        })
+    return jsonify(response), 200
 
 # ----------------------------
 # Words Endpoints
@@ -149,75 +177,6 @@ def delete_group(group_id):
     return jsonify({'result': 'success'}), 200
 
 # ----------------------------
-# Word Group Raw Data (NEW)
-# ----------------------------
-
-@api.route('/api/groups/<group_name>/raw', methods=['GET'])
-def get_or_generate_word_group(group_name):
-    from services import call_ollama_api, get_db_connection
-
-    # Connect to the database
-    conn = get_db_connection()
-    c = conn.cursor()
-
-    # Check if word group exists
-    c.execute("SELECT id FROM word_groups WHERE name = ?", (group_name,))
-    group = c.fetchone()
-
-    if not group:
-        # Word group not found, generate using Ollama
-        print(f"Word group '{group_name}' not found. Generating using Ollama...")
-        prompt = f"Generate a list of 100 basic German words."
-        ollama_response = call_ollama_api(prompt)
-
-        if 'error' in ollama_response:
-            conn.close()
-            return jsonify({"error": "Failed to generate words using Ollama"}), 500
-
-        # Parse response and store in DB
-        generated_words = ollama_response.get('response', "").split(",")
-        # Create word group
-        c.execute("INSERT INTO word_groups (name) VALUES (?)", (group_name,))
-        group_id = c.lastrowid
-
-        # Insert words into 'words' table
-        for word in generated_words:
-            clean_word = word.strip()
-            c.execute("INSERT INTO words (german, english, parts) VALUES (?, ?, ?)",
-                      (clean_word, "", "{}"))
-
-        conn.commit()
-        conn.close()
-
-        return jsonify({"message": f"Generated and stored {len(generated_words)} words for '{group_name}'."})
-
-    else:
-        # Word group exists, fetch associated words
-        group_id = group['id']
-        c.execute("SELECT german, english FROM words WHERE group_id = ?", (group_id,))
-        words = c.fetchall()
-        conn.close()
-
-        return jsonify([{"german": word["german"], "english": word["english"]} for word in words])
-
-# ----------------------------
-# Ollama Word Generation (NEW)
-# ----------------------------
-
-@api.route('/api/groups/<group_id>/generate_words', methods=['POST'])
-def generate_words_for_group(group_id):
-    """Generates words using Ollama and stores them in the database."""
-    data = request.get_json()
-    num_words = data.get("num_words", 100)  
-
-    result = generate_and_store_words(group_id, num_words=num_words)
-
-    if 'error' in result:
-        return jsonify({"error": result['error']}), 500
-
-    return jsonify(result), 200
-
-# ----------------------------
 # Sentence Generation & OCR Endpoints
 # ----------------------------
 
@@ -245,20 +204,41 @@ def grade_submission_route():
         data = request.get_json(force=True)
         target_sentence = data.get('target_sentence')
         transcription = data.get('transcription')
+        session_id = data.get('session_id')
 
-        if not target_sentence or not transcription:
-            return jsonify({"error": "Both 'target_sentence' and 'transcription' are required"}), 400
+        if not target_sentence or not transcription or not session_id:
+            return jsonify({"error": "Fields 'target_sentence', 'transcription', and 'session_id' are required"}), 400
 
+        # Call grading service
         result = grade_submission(target_sentence, transcription)
 
         if 'error' in result:
             return jsonify({"error": result['error']}), 500
 
-        return jsonify(result), 200
+        # Save to StudyActivity
+        new_activity = StudyActivity(
+            session_id=session_id,
+            transcription=transcription,
+            grade=result.get('grade'),
+            feedback=result.get('feedback')
+        )
+        db.session.add(new_activity)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Submission graded and saved.",
+            "activity_id": new_activity.id,
+            "grade": result.get('grade'),
+            "feedback": result.get('feedback')
+        }), 200
 
     except Exception as e:
         print(f"Error in grade_submission: {str(e)}")
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
+
+# ----------------------------
+# Add Grade to Existing Session
+# ----------------------------
 
 @api.route('/api/sessions/<int:session_id>/add_grade', methods=['POST'])
 def add_grade(session_id):
