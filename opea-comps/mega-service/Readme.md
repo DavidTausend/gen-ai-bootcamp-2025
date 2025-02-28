@@ -7,21 +7,6 @@ docker run --rm -p 4318:4318 otel/opentelemetry-collector
 # Request
 
 ```sh
-curl -X POST http://localhost:8008/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "llama3.2:1b",
-    "messages": [
-      {
-        "role": "user",
-        "content": "Hello, how are you?"
-      }
-    ],
-    "stream": false
-  }'
-```
-
-```sh
   curl -X POST http://localhost:8008/v1/example-service \
   -H "Content-Type: application/json" \
   -d '{

@@ -1,7 +1,9 @@
 import os
 import json
 import logging
-from fastapi import HTTPException
+import aiohttp
+from fastapi import HTTPException, Request
+from fastapi.responses import StreamingResponse
 from comps import MicroService, ServiceOrchestrator
 from comps.cores.mega.constants import ServiceType, ServiceRoleType
 from comps.cores.proto.api_protocol import (
@@ -11,6 +13,7 @@ from comps.cores.proto.api_protocol import (
     ChatMessage,
     UsageInfo
 )
+from comps.cores.proto.docarray import LLMParams
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
@@ -35,13 +38,25 @@ logging.basicConfig(level=logging.DEBUG)
 
 class ExampleService:
     def __init__(self, host="0.0.0.0", port=8000):
-        print("hello")
-        os.environ["TELEMETRY_ENDPOINT"] = ""
+        print("Initializing ExampleService...")
         self.host = host
         self.port = port
         self.endpoint = "/v1/example-service"
         self.megaservice = ServiceOrchestrator()
-    
+        os.environ["LOGFLAG"] = "true"  # Enable detailed logging
+
+    async def check_ollama_connection(self):
+        """Check if we can connect to Ollama"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                url = f"http://{LLM_SERVICE_HOST_IP}:{LLM_SERVICE_PORT}/api/tags"
+                async with session.get(url) as response:
+                    logging.debug(f"Ollama check status: {response.status}")
+                    return response.status == 200
+        except Exception as e:
+            logging.error(f"Failed to connect to Ollama: {e}")
+            return False
+
     def add_remote_service(self):
         llm = MicroService(
             name="llm",
@@ -52,7 +67,8 @@ class ExampleService:
             service_type=ServiceType.LLM,
         )
         self.megaservice.add(llm)
-    
+        logging.debug(f"Configured LLM service: {LLM_SERVICE_HOST_IP}:{LLM_SERVICE_PORT}")
+
     def start(self):
         self.service = MicroService(
             self.__class__.__name__,
@@ -65,61 +81,67 @@ class ExampleService:
         )
         self.service.add_route(self.endpoint, self.handle_request, methods=["POST"])
         self.service.start()
-    
-    async def handle_request(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
+
+    async def handle_request(self, request: Request):
         with tracer.start_as_current_span("handle_request"):
             try:
-                # Ensure correct format for "messages"
-                formatted_messages = [{"role": "user", "content": request.messages}]
-                
-                ollama_request = {
-                    "model": request.model or "llama3.2:1b",
-                    "messages": request.messages,
-                    "stream": False
-                }
-                
-                logging.debug(f"Sending request to Ollama: {json.dumps(ollama_request, indent=2)}")
-                
-                result = await self.megaservice.schedule(ollama_request)
-                
-                logging.debug(f"Ollama Response: {result}")
-                
-                if isinstance(result, tuple) and len(result) > 0:
-                    llm_response = result[0].get("llm/MicroService")
-                    
-                    if hasattr(llm_response, "body"):
-                        response_body = b""
-                        async for chunk in llm_response.body_iterator:
-                            response_body += chunk
-                        content = response_body.decode("utf-8")
-                    else:
-                        content = "No response content available"
+                if not await self.check_ollama_connection():
+                    raise HTTPException(status_code=500, detail="Cannot connect to Ollama service")
+
+                data = await request.json()
+                logging.debug(f"Received request data: {json.dumps(data, indent=2)}")
+
+                chat_request = ChatCompletionRequest.model_validate(data)
+                stream_opt = data.get("stream", True)
+
+                parameters = LLMParams(
+                    max_tokens=chat_request.max_tokens or 1024,
+                    top_k=chat_request.top_k or 10,
+                    top_p=chat_request.top_p or 0.95,
+                    temperature=chat_request.temperature or 0.01,
+                    frequency_penalty=chat_request.frequency_penalty or 0.0,
+                    presence_penalty=chat_request.presence_penalty or 0.0,
+                    repetition_penalty=chat_request.repetition_penalty or 1.03,
+                    stream=stream_opt,
+                    model=chat_request.model,
+                    chat_template=chat_request.chat_template or None,
+                )
+
+                initial_inputs = {"messages": chat_request.messages}
+                logging.debug(f"LLM request payload: {json.dumps(initial_inputs, indent=2)}")
+
+                result_dict, runtime_graph = await self.megaservice.schedule(
+                    initial_inputs=initial_inputs, llm_parameters=parameters
+                )
+
+                for node, response in result_dict.items():
+                    if isinstance(response, StreamingResponse):
+                        logging.debug("Streaming response detected, returning stream.")
+                        return response
+
+                last_node = runtime_graph.all_leaves()[-1]
+                service_result = result_dict.get(last_node, "No response received")
+
+                if isinstance(service_result, dict) and 'choices' in service_result:
+                    content = service_result['choices'][0].get('message', {}).get('content', '')
                 else:
-                    content = "Invalid response format"
-                
+                    content = str(service_result)
+
                 response = ChatCompletionResponse(
-                    model=request.model or "example-model",
+                    model=chat_request.model or "example-model",
                     choices=[
                         ChatCompletionResponseChoice(
                             index=0,
-                            message=ChatMessage(
-                                role="assistant",
-                                content=content
-                            ),
-                            finish_reason="stop"
+                            message=ChatMessage(role="assistant", content=content),
+                            finish_reason="stop",
                         )
                     ],
-                    usage=UsageInfo(
-                        prompt_tokens=0,
-                        completion_tokens=0,
-                        total_tokens=0
-                    )
+                    usage=UsageInfo(prompt_tokens=0, completion_tokens=0, total_tokens=0),
                 )
-                
                 return response
-            
+
             except Exception as e:
-                logging.error(f"Error handling request: {str(e)}")
+                logging.error(f"Error handling request: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
 
 # Initialize and start the service

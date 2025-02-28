@@ -68,6 +68,10 @@ docker compose up
 Add the localhost port which the container is running, that might be 8008
 
 ```sh
+docker exec -it ollama-server ollama pull llama3.2:1b
+```
+
+```sh
 curl http://localhost:8008/api/pull -d '{
   "model": "llama3.2:1b"
 }'

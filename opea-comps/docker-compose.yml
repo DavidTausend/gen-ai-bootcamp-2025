@@ -1,16 +1,29 @@
 services:
+  otel-collector:
+    image: otel/opentelemetry-collector
+    container_name: otel-collector
+    ports:
+      - "4318:4318"  # OTLP HTTP port
+      - "55680:55680" # OTLP gRPC port
+    networks:
+      - default
+
   ollama-server:
     image: ollama/ollama
     container_name: ollama-server
     ports:
       - "8008:11434"
-      #- ${LLM_ENDPOINT_PORT:-8008}:11434
     environment:
       no_proxy: ${no_proxy}
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
       LLM_MODEL_ID: ${LLM_MODEL_ID}
       host_ip: ${host_ip}
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+    depends_on:
+      - otel-collector
+    networks:
+      - default
 
 networks:
   default:
