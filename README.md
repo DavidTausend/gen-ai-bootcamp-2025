@@ -123,11 +123,11 @@ The frontend is built using React and connects directly to the backend APIs. It 
 
 ## Opea (Open Process Execution Agent)
 
-The OPEA module handles complex chat interaction workflows.
+The OPEA module handles complex chat interaction workflows. It was improved with debugging and LLM health checks and the streaming feature was added.
 
 ### Key Features:
 
-- **OpenTelemetry Integration:** Exports logs and traces for better observability.
+- **OpenTelemetry Integration:** Exports logs and traces for better observability and it setup with docker.
 
 ## Vocab Importer
 
@@ -160,6 +160,20 @@ The Vocab Importer is built with Streamlit and allows educators to upload and ma
 - **Frontend:** Streamlit
 - **AI Model:** Llama2 via **Ollama API**
 - **Database:** SQLite (`study_sessions.db`)
+
+## Song Vocab
+
+The Song Vocab API is a FastAPI-based service that retrieves song lyrics from the internet, extracts vocabulary words, and stores them in a structured SQLite database.
+
+## Features
+- **Retrieves song lyrics** from the web.
+- **Extracts key vocabulary words** from lyrics.
+- **Stores structured vocabulary** with definitions and examples.
+- **Provides API access** for vocabulary retrieval and further analysis.
+
+## Response result
+
+[{'title': '99 Luftballons', 'url': 'https://westmusiker.de/wp-content/uploads/2020/08/Liedtext.pdf', 'snippet': '99 Luftballons. Nena. Hast Du etwas Zeit für mich. Dann singe ich ein Lied fuer Dich. Von 99 Luftballons. Auf ihrem Weg zum Horizont. Denkst Du vielleicht grad ...'}, {'title': '99 Luftballons Songtext von Nena', 'url': 'https://www.songtexte.com/songtext/nena/99-luftballons-63dcfa57.html', 'snippet': 'Hast du etwas Zeit für mich? Dann singe ich ein Lied für dich. Von neunundneunzig Luftballons Auf ihrem Weg zum Horizont Denkst du vielleicht grad an mich?'}, {'title': 'Nena – 99 Luftballons Lyrics', 'url': 'https://genius.com/Nena-99-luftballons-lyrics', 'snippet': '[Songtext zu „99 Luftballons“] [Strophe 1] Hast du etwas Zeit für mich? Dann singe ich ein Lied für dich. Von 99 Luftballons Auf ihrem Weg zum Horizont'}, {'title': 'NENA: 99 LUFTBALLONS', 'url': 'https://www.zebis.ch/sites/default/files/teaching_material/nena_99_luftballons.pdf', 'snippet': "Hast Du etwas Zeit für mich dann singe ich ein Lied für dich von 99 Luftballons auf ihrem Weg zum Horizont. Denkst Du vielleicht grad' an mich."}]
 
 ### Programming Languages
 
