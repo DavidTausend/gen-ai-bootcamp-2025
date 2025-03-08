@@ -193,6 +193,7 @@ The Song Vocab API is a FastAPI-based service that retrieves song lyrics from th
 - **[Windsurf](https://codeium.com/windsurf):** Used for backend deployment with Python Flask, enabling AI-driven interactions and ensuring seamless integration with language learning tools.
 - **[Lovable](https://lovable.dev/):** Used for frontend development.
 - **[Groq](https://groq.com/):** Provides accelerated AI inference for large language models.
+- **[]():** 
 
 ## Sentence Constructor AI Model Readme Files
 
@@ -220,9 +221,22 @@ I attempted to implement audio for the language assistant, but I was unable to m
 
 [Mega Service solution](/Users/davidtausend/Documents/lang-portal/genAI/gen-ai-bootcamp-2025/opea-comps/mega-service/Readme.md)
 
-### Audio Implementation
 
-The audio implementation encountered several challenges throughout the development process. One major issue was the difficulty in reliably extracting audio streams from YouTube, primarily due to API changes and unsupported formats. Compatibility problems also arose, as certain audio formats weren’t supported by the integrated player, leading to playback failures. Additionally, downloading and streaming audio resulted in performance lags, particularly with larger files, which negatively impacted user experience. After evaluating these complications, the decision was made to remove the audio features altogether to streamline the platform and avoid further complexities.
+### TTS Service Issue
+
+The TTS (Text-to-Speech) Service faced several issues during deployment and integration:
+
+#### Dependency Compatibility Issues
+   - Some required Python packages (e.g., `lz4`, `vhacdx`, `mapbox_earcut`) failed to build correctly on macOS with the arm64 architecture.
+   - The GCC compiler was not correctly linked, causing CMake-related errors.
+
+#### Docker Build Errors
+   - The `Dockerfile` was missing or incorrectly referenced, leading to build failures.
+   - The TTS service failed to install dependencies due to timeout issues and missing pre-built wheels for `arm64`.
+
+#### Audio Processing Challenges
+   - The generated speech files had inconsistent playback quality and long latency.
+   - The service was not properly handling text normalization, resulting in unnatural-sounding speech output.
 
 ## Acknowledgments
 

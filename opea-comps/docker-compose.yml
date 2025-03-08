@@ -14,11 +14,28 @@ services:
     ports:
       - "8008:11434"
     environment:
-      no_proxy: ${no_proxy}
-      http_proxy: ${http_proxy}
-      https_proxy: ${https_proxy}
-      LLM_MODEL_ID: ${LLM_MODEL_ID}
-      host_ip: ${host_ip}
+      no_proxy: ${no_proxy:-}
+      http_proxy: ${http_proxy:-}
+      https_proxy: ${https_proxy:-}
+      LLM_MODEL_ID: ${LLM_MODEL_ID:-}
+      host_ip: ${host_ip:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+    depends_on:
+      - otel-collector
+    networks:
+      - default
+
+  tts-service:
+    build:
+      context: .
+      dockerfile: tts/src/Dockerfile
+    container_name: tts-service
+    ports:
+      - "8000:8000"
+    environment:
+      no_proxy: ${no_proxy:-}
+      http_proxy: ${http_proxy:-}
+      https_proxy: ${https_proxy:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
     depends_on:
       - otel-collector
