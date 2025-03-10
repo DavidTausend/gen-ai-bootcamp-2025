@@ -1,0 +1,171 @@
+[
+  {
+    "german": "bezahlen",
+    "english": "to pay",
+    "parts": [
+      { "german_phonetic": ["be"] },
+      { "german_phonetic": ["zah"] },
+      { "german_phonetic": ["len"] }
+    ]
+  },
+  {
+    "german": "gehen",
+    "english": "to go",
+    "parts": [
+      { "german_phonetic": ["ge"] },
+      { "german_phonetic": ["hen"] }
+    ]
+  },
+  {
+    "german": "trainieren",
+    "english": "to exercise",
+    "parts": [
+      { "german_phonetic": ["trai"] },
+      { "german_phonetic": ["nie"] },
+      { "german_phonetic": ["ren"] }
+    ]
+  },
+  {
+    "german": "aufwachen",
+    "english": "to wake up",
+    "parts": [
+      { "german_phonetic": ["auf"] },
+      { "german_phonetic": ["wa"] },
+      { "german_phonetic": ["chen"] }
+    ]
+  },
+  {
+    "german": "einkaufen",
+    "english": "to shop",
+    "parts": [
+      { "german_phonetic": ["ein"] },
+      { "german_phonetic": ["kau"] },
+      { "german_phonetic": ["fen"] }
+    ]
+  },
+  {
+    "german": "zurückkehren",
+    "english": "to return",
+    "parts": [
+      { "german_phonetic": ["zu"] },
+      { "german_phonetic": ["rück"] },
+      { "german_phonetic": ["keh"] },
+      { "german_phonetic": ["ren"] }
+    ]
+  },
+  {
+    "german": "schreiben",
+    "english": "to write",
+    "parts": [
+      { "german_phonetic": ["schrei"] },
+      { "german_phonetic": ["ben"] }
+    ]
+  },
+  {
+    "german": "besichtigen",
+    "english": "to sightsee",
+    "parts": [
+      { "german_phonetic": ["be"] },
+      { "german_phonetic": ["sich"] },
+      { "german_phonetic": ["ti"] },
+      { "german_phonetic": ["gen"] }
+    ]
+  },
+  {
+    "german": "hören",
+    "english": "to listen",
+    "parts": [
+      { "german_phonetic": ["hö"] },
+      { "german_phonetic": ["ren"] }
+    ]
+  },
+  {
+    "german": "kommen",
+    "english": "to come",
+    "parts": [
+      { "german_phonetic": ["kom"] },
+      { "german_phonetic": ["men"] }
+    ]
+  },
+  {
+    "german": "machen",
+    "english": "to do",
+    "parts": [
+      { "german_phonetic": ["ma"] },
+      { "german_phonetic": ["chen"] }
+    ]
+  },
+  {
+    "german": "essen",
+    "english": "to eat",
+    "parts": [
+      { "german_phonetic": ["es"] },
+      { "german_phonetic": ["sen"] }
+    ]
+  },
+  {
+    "german": "schlafen",
+    "english": "to sleep",
+    "parts": [
+      { "german_phonetic": ["schla"] },
+      { "german_phonetic": ["fen"] }
+    ]
+  },
+  {
+    "german": "trinken",
+    "english": "to drink",
+    "parts": [
+      { "german_phonetic": ["trin"] },
+      { "german_phonetic": ["ken"] }
+    ]
+  },
+  {
+    "german": "fahren",
+    "english": "to ride",
+    "parts": [
+      { "german_phonetic": ["fa"] },
+      { "german_phonetic": ["ren"] }
+    ]
+  },
+  {
+    "german": "sprechen",
+    "english": "to speak",
+    "parts": [
+      { "german_phonetic": ["spre"] },
+      { "german_phonetic": ["chen"] }
+    ]
+  },
+  {
+    "german": "lernen",
+    "english": "to study",
+    "parts": [
+      { "german_phonetic": ["ler"] },
+      { "german_phonetic": ["nen"] }
+    ]
+  },
+  {
+    "german": "sehen",
+    "english": "to see",
+    "parts": [
+      { "german_phonetic": ["se"] },
+      { "german_phonetic": ["hen"] }
+    ]
+  },
+  {
+    "german": "lesen",
+    "english": "to read",
+    "parts": [
+      { "german_phonetic": ["le"] },
+      { "german_phonetic": ["sen"] }
+    ]
+  },
+  {
+    "german": "anrufen",
+    "english": "to call (phone)",
+    "parts": [
+      { "german_phonetic": ["an"] },
+      { "german_phonetic": ["ru"] },
+      { "german_phonetic": ["fen"] }
+    ]
+  }
+]

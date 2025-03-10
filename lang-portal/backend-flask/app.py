@@ -1,199 +1,77 @@
-from flask import Flask, request, jsonify
+from flask import Flask, g
 from flask_cors import CORS
-import sqlite3
-import base64
-import requests
-import json
-from manga_ocr import MangaOcr
-from PIL import Image
-import io
-import os
 
-# Initialize MangaOCR globally
-ocr = MangaOcr()
+from lib.db import Db
 
-# ----------------------------
-# Flask Application Factory
-# ----------------------------
+import routes.words
+import routes.groups
+import routes.study_sessions
+import routes.dashboard
+import routes.study_activities
 
-def create_app():
-    # Initialize Flask app
+def get_allowed_origins(app):
+    try:
+        cursor = app.db.cursor()
+        cursor.execute('SELECT url FROM study_activities')
+        urls = cursor.fetchall()
+        # Convert URLs to origins (e.g., https://example.com/app -> https://example.com)
+        origins = set()
+        for url in urls:
+            try:
+                from urllib.parse import urlparse
+                parsed = urlparse(url['url'])
+                origin = f"{parsed.scheme}://{parsed.netloc}"
+                origins.add(origin)
+            except:
+                continue
+        return list(origins) if origins else ["*"]
+    except:
+        return ["*"]  # Fallback to allow all origins if there's an error
+
+def create_app(test_config=None):
     app = Flask(__name__)
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    
+    if test_config is None:
+        app.config.from_mapping(
+            DATABASE='words.db'
+        )
+    else:
+        app.config.update(test_config)
+    
+    # Initialize database first since we need it for CORS configuration
+    app.db = Db(database=app.config['DATABASE'])
+    
+    # Get allowed origins from study_activities table
+    allowed_origins = get_allowed_origins(app)
+    
+    # In development, add localhost to allowed origins
+    if app.debug:
+        allowed_origins.extend(["http://localhost:8080", "http://127.0.0.1:8080"])
+    
+    # Configure CORS with combined origins
+    CORS(app, resources={
+        r"/*": {
+            "origins": allowed_origins,
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }
+    })
 
-    # Configure SQLite database
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    db_path = os.path.join(basedir, 'instance', 'app_data.db')
-    app.config['DATABASE'] = db_path
+    # Close database connection
+    @app.teardown_appcontext
+    def close_db(exception):
+        app.db.close()
 
-    # Initialize the database
-    init_db(db_path)
-
-    # ----------------------------
-    # Helper Functions
-    # ----------------------------
-
-    def get_db_connection():
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        return conn
-
-    # ----------------------------
-    # Routes
-    # ----------------------------
-
-    @app.route('/')
-    def home():
-        return "Welcome to the Unified SQLite Language Portal API!"
-
-    # Generate Sentence Route
-    @app.route("/api/generate_sentence", methods=["POST"])
-    def generate_sentence():
-        data = request.json
-        word = data.get("word", "")
-        prompt = f"Generate one simple English sentence that includes the German word '{word}'. Only return the sentence."
-        try:
-            response = requests.post(
-                "http://localhost:11434/api/generate",
-                json={"model": "llama2", "prompt": prompt},
-                stream=True
-            )
-            if response.status_code == 200:
-                generated_text = ""
-                for line in response.iter_lines():
-                    if line:
-                        try:
-                            parsed_line = json.loads(line.decode('utf-8').strip())
-                            generated_text += parsed_line.get("response", "")
-                        except json.JSONDecodeError as e:
-                            print(f"Skipping invalid JSON chunk: {e}")
-                return jsonify({"sentence": generated_text.split('.')[0] + "."})
-            else:
-                error_message = response.json().get("error", "Unknown error")
-                return jsonify({"error": error_message}), 500
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-
-    # Grade Submission Route
-    @app.route("/api/grade_submission", methods=["POST"])
-    def grade_submission():
-        data = request.json
-        image_data = data.get("image_data", "")
-        target_sentence = data.get("target_sentence", "")
-
-        try:
-            image_bytes = base64.b64decode(image_data)
-            image = Image.open(io.BytesIO(image_bytes))
-            transcription = ocr(image)
-            print(f"Transcription: {transcription}")
-
-            translation_prompt = f"Translate this German text to English: {transcription}"
-            translation_response = requests.post(
-                "http://localhost:11434/api/generate",
-                json={"model": "llama2", "prompt": translation_prompt}
-            )
-            translation_data = translation_response.json()
-            translation = translation_data.get("response", "").strip()
-            print(f"Translation: {translation}")
-
-            grading_prompt = (
-                f"Grade this German writing sample:\n"
-                f"Target English sentence: {target_sentence}\n"
-                f"Student's German: {transcription}\n"
-                f"Literal translation: {translation}\n"
-                "Provide your assessment with a grade (S/A/B/C) and detailed feedback."
-            )
-
-            grading_response = requests.post(
-                "http://localhost:11434/api/generate",
-                json={"model": "llama2", "prompt": grading_prompt}
-            )
-
-            grading_data = grading_response.json()
-            grading_output = grading_data.get("response", "").strip()
-            grade_line = grading_output.split("\n")[0]
-            grade = grade_line.split(":")[1].strip() if ":" in grade_line else "N/A"
-            feedback = "\n".join(grading_output.split("\n")[1:]).strip()
-
-            # Save grading result to SQLite
-            conn = get_db_connection()
-            c = conn.cursor()
-            c.execute("INSERT INTO sessions (sentence, grade, feedback) VALUES (?, ?, ?)",
-                      (target_sentence, grade, feedback))
-            conn.commit()
-            conn.close()
-
-            return jsonify({
-                "transcription": transcription,
-                "translation": translation,
-                "grade": grade,
-                "feedback": feedback
-            })
-
-        except Exception as e:
-            print(f"Error in grade_submission: {e}")
-            return jsonify({"error": str(e)}), 500
-
-    # Retrieve Saved Sessions
-    @app.route("/api/sessions", methods=["GET"])
-    def get_sessions():
-        try:
-            conn = get_db_connection()
-            c = conn.cursor()
-            c.execute("SELECT sentence, grade, feedback FROM sessions")
-            sessions = c.fetchall()
-            conn.close()
-            return jsonify([{"sentence": s["sentence"], "grade": s["grade"], "feedback": s["feedback"]} for s in sessions])
-        except Exception as e:
-            print(f"Error in get_sessions: {e}")
-            return jsonify({"error": str(e)}), 500
-
+    # load routes -----------
+    routes.words.load(app)
+    routes.groups.load(app)
+    routes.study_sessions.load(app)
+    routes.dashboard.load(app)
+    routes.study_activities.load(app)
+    
     return app
 
-# ----------------------------
-# Database Initialization
-# ----------------------------
+app = create_app()
 
-def init_db(db_path):
-    conn = sqlite3.connect(db_path)
-    c = conn.cursor()
-    # Create tables for words, study sessions, and grading
-    c.execute('''CREATE TABLE IF NOT EXISTS words (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    german TEXT NOT NULL,
-                    english TEXT NOT NULL,
-                    parts TEXT
-                )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS word_groups (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL
-                )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS study_sessions (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    group_id INTEGER,
-                    created_at TEXT,
-                    FOREIGN KEY(group_id) REFERENCES word_groups(id)
-                )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS study_activities (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    study_session_id INTEGER,
-                    created_at TEXT,
-                    FOREIGN KEY(study_session_id) REFERENCES study_sessions(id)
-                )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS sessions (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    sentence TEXT,
-                    grade TEXT,
-                    feedback TEXT
-                )''')
-    conn.commit()
-    conn.close()
-    print("Database initialized successfully!")
-
-# ----------------------------
-# Run the App
-# ----------------------------
-
-if __name__ == "__main__":
-    app = create_app()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+if __name__ == '__main__':
+    app.run(debug=True)

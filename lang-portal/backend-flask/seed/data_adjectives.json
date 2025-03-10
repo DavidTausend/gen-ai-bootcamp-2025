@@ -1,0 +1,129 @@
+[
+  {
+    "german": "gut",
+    "english": "good",
+    "parts": [
+      { "german_phonetic": ["gut"] }
+    ]
+  },
+  {
+    "german": "alt",
+    "english": "old",
+    "parts": [
+      { "german_phonetic": ["alt"] }
+    ]
+  },
+  {
+    "german": "beschäftigt",
+    "english": "busy",
+    "parts": [
+      { "german_phonetic": ["be"] },
+      { "german_phonetic": ["schäf"] },
+      { "german_phonetic": ["tigt"] }
+    ]
+  },
+  {
+    "german": "neu",
+    "english": "new",
+    "parts": [
+      { "german_phonetic": ["neu"] }
+    ]
+  },
+  {
+    "german": "schlecht",
+    "english": "bad",
+    "parts": [
+      { "german_phonetic": ["schlecht"] }
+    ]
+  },
+  {
+    "german": "traurig",
+    "english": "sad",
+    "parts": [
+      { "german_phonetic": ["trau"] },
+      { "german_phonetic": ["rig"] }
+    ]
+  },
+  {
+    "german": "froh",
+    "english": "glad",
+    "parts": [
+      { "german_phonetic": ["froh"] }
+    ]
+  },
+  {
+    "german": "dick",
+    "english": "fat",
+    "parts": [
+      { "german_phonetic": ["dick"] }
+    ]
+  },
+  {
+    "german": "dünn",
+    "english": "thin",
+    "parts": [
+      { "german_phonetic": ["dünn"] }
+    ]
+  },
+  {
+    "german": "interessant",
+    "english": "interesting",
+    "parts": [
+      { "german_phonetic": ["in"] },
+      { "german_phonetic": ["ter"] },
+      { "german_phonetic": ["es"] },
+      { "german_phonetic": ["sant"] }
+    ]
+  },
+  {
+    "german": "gleich",
+    "english": "same",
+    "parts": [
+      { "german_phonetic": ["gleich"] }
+    ]
+  },
+  {
+    "german": "schmutzig",
+    "english": "dirty",
+    "parts": [
+      { "german_phonetic": ["schmutz"] },
+      { "german_phonetic": ["ig"] }
+    ]
+  },
+  {
+    "german": "hübsch",
+    "english": "pretty",
+    "parts": [
+      { "german_phonetic": ["hübsch"] }
+    ]
+  },
+  {
+    "german": "heiß",
+    "english": "hot",
+    "parts": [
+      { "german_phonetic": ["heiß"] }
+    ]
+  },
+  {
+    "german": "kalt",
+    "english": "cold",
+    "parts": [
+      { "german_phonetic": ["kalt"] }
+    ]
+  },
+  {
+    "german": "kühl",
+    "english": "cool",
+    "parts": [
+      { "german_phonetic": ["kühl"] }
+    ]
+  },
+  {
+    "german": "lecker",
+    "english": "tasty",
+    "parts": [
+      { "german_phonetic": ["leck"] },
+      { "german_phonetic": ["er"] }
+    ]
+  }
+]

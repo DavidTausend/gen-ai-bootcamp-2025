@@ -1,127 +1,82 @@
-import { useState, useEffect } from "react";
-import { API_BASE_URL } from "../config";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Volume2 } from "lucide-react";
+import React, { useState, useEffect } from 'react'
+import { fetchWords, type Word } from '../services/api'
+import WordsTable, { WordSortKey } from '../components/WordsTable'
 
-// Function to fetch words from the API
-const fetchWords = async (page: number) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/words?page=${page}`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch words");
-    }
-    return response.json();
-  } catch (error) {
-    console.error("Error fetching words:", error);
-    return { items: [], pagination: { current_page: 1, total_pages: 1 } };
-  }
-};
+export default function Words() {
+  const [words, setWords] = useState<Word[]>([])
+  const [sortKey, setSortKey] = useState<WordSortKey>('kanji')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-const Words = () => {
-  const [words, setWords] = useState<{ id: number; german: string; english: string; correct?: number; wrong?: number }[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch words when the component loads or when the page changes
   useEffect(() => {
     const loadWords = async () => {
-      setLoading(true);
-      const data = await fetchWords(currentPage);
-      setWords(data.items);
-      setTotalPages(data.pagination.total_pages);
-      setLoading(false);
-    };
-    loadWords();
-  }, [currentPage]);
+      setIsLoading(true)
+      setError(null)
+      try {
+        const response = await fetchWords(currentPage, sortKey, sortDirection)
+        setWords(response.words)
+        setTotalPages(response.total_pages)
+      } catch (err) {
+        setError('Failed to load words')
+        console.error(err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
-  const playSound = (word: string) => {
-    const utterance = new SpeechSynthesisUtterance(word);
-    utterance.lang = "de-DE"; // German pronunciation
-    speechSynthesis.speak(utterance);
-  };
+    loadWords()
+  }, [currentPage, sortKey, sortDirection])
+
+  const handleSort = (key: WordSortKey) => {
+    if (key === sortKey) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortKey(key)
+      setSortDirection('asc')
+    }
+  }
+
+  if (isLoading) {
+    return <div className="text-center py-4">Loading...</div>
+  }
+
+  if (error) {
+    return <div className="text-red-500 text-center py-4">{error}</div>
+  }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Words</h1>
-      {loading ? (
-        <p className="text-center text-gray-500">Loading words...</p>
-      ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>German</TableHead>
-                <TableHead>English</TableHead>
-                <TableHead>Correct</TableHead>
-                <TableHead>Wrong</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {words.length > 0 ? (
-                words.map((word) => (
-                  <TableRow key={word.id}>
-                    <TableCell className="flex items-center space-x-2">
-                      <span>{word.german}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => playSound(word.german)}
-                      >
-                        <Volume2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                    <TableCell>{word.english}</TableCell>
-                    <TableCell className="text-green-600">{word.correct || 0}</TableCell>
-                    <TableCell className="text-red-600">{word.wrong || 0}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-gray-500">
-                    No words found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+    <div className="space-y-4">
+      <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Words</h1>
+      
+      <WordsTable 
+        words={words}
+        sortKey={sortKey}
+        sortDirection={sortDirection}
+        onSort={handleSort}
+      />
 
-      {/* Pagination Controls */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-500">
+      <div className="flex justify-center space-x-2">
+        <button
+          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          disabled={currentPage === 1}
+          className="px-4 py-2 border rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700"
+        >
+          Previous
+        </button>
+        <span className="px-4 py-2 text-gray-800 dark:text-gray-200">
           Page {currentPage} of {totalPages}
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-          >
-            Next
-          </Button>
-        </div>
+        </span>
+        <button
+          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 border rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700"
+        >
+          Next
+        </button>
       </div>
     </div>
-  );
-};
-
-export default Words;
+  )
+}
