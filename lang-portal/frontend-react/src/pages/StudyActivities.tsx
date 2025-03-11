@@ -13,6 +13,12 @@ export default function StudyActivities() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const additionalActivities: ActivityCard[] = [
+    { id: 101, preview_url: '/images/song-vocab.png', title: 'Song Vocab', launch_url: '/song-vocab' },
+    { id: 102, preview_url: '/images/writing-practice.png', title: 'Writing Practice', launch_url: '/writing-practice' },
+    { id: 103, preview_url: '/images/language-learning-assistant.png', title: 'Language Learning Assistant', launch_url: '/language-learning-assistant' },
+  ]
+
   useEffect(() => {
     fetch('http://localhost:5000/api/study-activities')
       .then(response => {
@@ -22,7 +28,7 @@ export default function StudyActivities() {
         return response.json()
       })
       .then(data => {
-        setActivities(data)
+        setActivities([...data, ...additionalActivities])
         setLoading(false)
       })
       .catch(err => {
