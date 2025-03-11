@@ -14,4 +14,3 @@ pip install -r requirements.txt
 ## Run Frontend
 streamlit run frontend/main.py
 
-https://pypi.org/project/gTTS/

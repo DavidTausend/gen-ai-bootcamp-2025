@@ -1,3 +1,18 @@
+# Activate python environment
+
+```sh
+python3 -m venv venv
+```
+```sh
+source venv/bin/activate
+```
+
+# Install dependencies
+
+```sh
+pip install -r requirements.txt
+```
+
 ## Setting up the database
 
 ### Install invoke
@@ -21,11 +36,7 @@ Please note that migrations and seed data is manually coded to be imported in th
 
 Simply delete the `words.db` to clear entire database.
 
-## Set up the environment
 
-```sh
-pip install -r requirements.txt
-```
 
 ## Running the backend api
 

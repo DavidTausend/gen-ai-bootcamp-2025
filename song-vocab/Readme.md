@@ -6,22 +6,22 @@ https://ollama.com/download
 
 ollama run mistral
 
-## Activate python environment
+# Activate python environment
 
 python3 -m venv venv
 
 source venv/bin/activate 
 
 
-## Install requirements
+# Install requirements
 
 pip install -r requirements.txt
 
-## Run the app
+# Run the app
 
 uvicorn main:app --host 0.0.0.0 --port 8000
 
-## Get lycrics song
+# Get lycrics song
 
 python3 serp-tool-test.py
 
