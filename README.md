@@ -17,15 +17,25 @@ This project uses AI to assist A1-level German learners by guiding sentence cons
 - [Frontend](#frontend)
 - [Opea](#opea-open-process-execution-agent)
 - [Vocab Importer](#vocab-importer)
-- [Technologies](#technologies)
-  - [Programming Languages](#programming-languages)
-  - [Applications, Plugins & Tools Used](#applications--plugins---tools-used)
+- [Writing Practice](#writing-practice)
+- [Song Vocab](#song-vocab)
+- [Response result](#response-result)
+- [Programming Languages](#programming-languages)
+- [Applications, Plugins & Tools Used](#applications--plugins---tools-used)
 - [Sentence Constructor AI Model Readme Files](#sentence-constructor-ai-model-readme-files)
 - [Problems](#problems)
   - [Meta AI](#meta-ai)
   - [Frontend Integration with Backend](#frontend-integration-with-backend)
   - [Mega Service](#mega-service)
 - [Acknowledgments](#acknowledgments)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [Technical Specifications](#technical-specifications)
+- [Environment Setup](#environment-setup)
+- [Docker Usage](#docker-usage)
+- [Database Information](#database-information)
+- [Module-Specific Details](#module-specific-details)
 
 [Generate TOC](https://ecotrust-canada.github.io/markdown-toc/)
 
@@ -193,7 +203,6 @@ The Song Vocab API is a FastAPI-based service that retrieves song lyrics from th
 - **[Windsurf](https://codeium.com/windsurf):** Used for backend deployment with Python Flask, enabling AI-driven interactions and ensuring seamless integration with language learning tools.
 - **[Lovable](https://lovable.dev/):** Used for frontend development.
 - **[Groq](https://groq.com/):** Provides accelerated AI inference for large language models.
-- **[]():** 
 
 ## Sentence Constructor AI Model Readme Files
 
@@ -210,6 +219,10 @@ I didn't use Meta AI for the project because it isn't launched yet in German, an
 ### Frontend Integration with Backend
 
 There are a couple of problems between the frontend and backend API integration that need to be corrected in the near future, including inconsistent API responses and CORS configuration issues.
+
+#### Resolved
+
+I took the example of andrew code and converted it to work for the german language website.
 
 ### Mega Service
 
@@ -241,3 +254,87 @@ The TTS (Text-to-Speech) Service faced several issues during deployment and inte
 ## Acknowledgments
 
 - My Mentor, **Andrew Brown** — I want to thank him for his guidance and support throughout this journey, helping me deepen my understanding of GenAI.
+
+## Installation
+
+To set up the project locally, follow these steps:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/DavidTausend/gen-ai-bootcamp-2025.git
+   ```
+
+2. Navigate to the project directory:
+   ```bash
+   cd gen-ai-bootcamp-2025
+   ```
+
+3. Install the required dependencies for both backend and frontend:
+   ```bash
+   # Backend
+   cd lang-portal/backend-flask
+   pip install -r requirements.txt
+
+   # Frontend
+   cd ../frontend-react
+   npm install
+   ```
+
+## Usage
+
+To run the project, follow these steps:
+
+1. Start the backend server:
+   ```bash
+   cd lang-portal/backend-flask
+   flask run
+   ```
+
+2. Start the frontend application:
+   ```bash
+   cd ../frontend-react
+   npm start
+   ```
+
+Access the application via `http://localhost:3000`.
+
+## Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix.
+3. Commit your changes and push to your fork.
+4. Submit a pull request with a detailed description of your changes.
+
+## Technical Specifications
+
+For detailed technical insights, refer to the technical specification documents available in various modules:
+- [Backend Technical Specs](lang-portal/Backend-Technical-Specs.md)
+- [Frontend Technical Specs](lang-portal/Frontend-Technical-Specs.md)
+- [Song Vocab Tech Specs](song-vocab/Tech-specs.md)
+- [Writing Practice Tech Specs](writing-practice/Tech-specs.md)
+
+## Environment Setup
+
+Ensure you have the necessary environment variables set up. Refer to the `.env` files in the respective directories for guidance on required configurations.
+
+## Docker Usage
+
+The project supports Docker for easy setup and deployment. Use the `docker-compose.yml` file located in the `opea-comps` directory to start the services:
+
+```bash
+docker-compose up --build
+```
+
+## Database Information
+
+The project uses SQLite databases to store data. Key databases include:
+- `german_lessons.db` in `lenguage_learning_assistant`
+- `study_sessions.db` in `writing-practice`
+
+Ensure these databases are properly configured and accessible for the application to function correctly.
+
+## Module-Specific Details
+
+Each module may have its own specific details and documentation. Refer to the README or Tech-specs files within each module for more information.
